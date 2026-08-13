@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#f5f5f7">
-<title>오락실 정산 입력기</title>
+<title>짱오락실 서면점 정산 입력기 v1.0</title>
 <style>
 :root{
   --bg:#f5f5f7;--card:#fff;--text:#111;--sub:#6b6b70;--line:#d8d8dc;
@@ -68,7 +68,7 @@ hr{border:0;border-top:1px solid #eee;margin:15px 0}
 </head>
 <body>
 <div class="wrap">
-  <h1>오락실 정산 입력기</h1>
+  <h1>짱오락실 서면점 정산 입력기 v1.0</h1>
   <div class="sub">현장 입력은 한 번만. 데이터는 이 브라우저에 자동 저장.</div>
 
   <!-- HOME -->
@@ -476,7 +476,9 @@ $("timeExcel").onclick=()=>{
     ])
   ];
   addSheet(wb,`${timeHour}시 매출`,data,[18,14],"FFFF00");
-  XLSX.writeFile(wb,`${timeHour}시_코코짱_매출.xlsx`);
+  const now=new Date();
+  const stamp=`${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}`;
+  XLSX.writeFile(wb,`시간매출_${timeHour}시_${stamp}.xlsx`);
   $("timeStatus").textContent="시간매출 XLSX 저장 완료 ✓";
 };
 $("timeReset").onclick=()=>{
@@ -768,7 +770,7 @@ $("exportExcel").onclick=()=>{
 
  const now=new Date();
  const stamp=`${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}`;
- XLSX.writeFile(wb,`오락실_마감정산_${stamp}.xlsx`);
+ XLSX.writeFile(wb,`마감정산_${stamp}.xlsx`);
  if(type) $("status").textContent="전체 마감 XLSX 저장 완료 ✓";
 };
 if($("resetAll")) $("resetAll").onclick=()=>{
