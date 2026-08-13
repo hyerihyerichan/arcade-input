@@ -64,7 +64,7 @@ hr{border:0;border-top:1px solid #eee;margin:15px 0}
 .section-title{font-size:18px;font-weight:900}
 .badge{display:inline-block;border-radius:999px;background:#efeff3;padding:5px 9px;font-size:12px;font-weight:800;color:#555}
 </style>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -313,9 +313,23 @@ function numOrBlank(v){
   const n=Number(v);
   return Number.isFinite(n)?n:v;
 }
-function addSheet(wb,name,data,widths){
+function addSheet(wb,name,data,widths,machineFill=null){
   const ws=XLSX.utils.aoa_to_sheet(data);
   ws["!cols"]=widths.map(w=>({wch:w}));
+
+  // 원본 "일일 배출량 - 8월첫째주" 파일의 기계명 셀 배경색을 재현
+  if(machineFill){
+    for(let r=1;r<data.length;r++){
+      const addr=XLSX.utils.encode_cell({r:r,c:0});
+      if(ws[addr]){
+        ws[addr].s={
+          fill:{patternType:"solid",fgColor:{rgb:machineFill}},
+          alignment:{vertical:"center"}
+        };
+      }
+    }
+  }
+
   XLSX.utils.book_append_sheet(wb,ws,name);
 }
 function excelReady(){
@@ -461,7 +475,7 @@ $("timeExcel").onclick=()=>{
       numOrBlank(r.sales)
     ])
   ];
-  addSheet(wb,`${timeHour}시 매출`,data,[18,14]);
+  addSheet(wb,`${timeHour}시 매출`,data,[18,14],"FFFF00");
   XLSX.writeFile(wb,`${timeHour}시_코코짱_매출.xlsx`);
   $("timeStatus").textContent="시간매출 XLSX 저장 완료 ✓";
 };
@@ -727,22 +741,22 @@ $("exportExcel").onclick=()=>{
  addSheet(wb,"짱프렌즈",[
    ["기계명","누적 매출","배출량"],
    ...all.friends.rows.map(r=>[`짱프렌즈_${String(r.machine).padStart(2,"0")}`,numOrBlank(r.sales),numOrBlank(r.output)])
- ],[18,12,12]);
+ ],[18,12,12],"FFFF00");
 
  addSheet(wb,"잼나3",[
    ["기계명","배출량"],
    ...all.jamna.rows.map(r=>[`잼나3_${r.machine}`,numOrBlank(r.output)])
- ],[18,12]);
+ ],[18,12],"D99694");
 
  addSheet(wb,"미니",[
    ["기계명","왼쪽","오른쪽"],
    ...all.mini.rows.map(r=>[`잼나 4 미니_${r.machine}`,numOrBlank(r.leftOutput),numOrBlank(r.rightOutput)])
- ],[20,12,12]);
+ ],[20,12,12],"D99694");
 
  addSheet(wb,"조이플레이어",[
    ["기계명","배출량"],
    ...all.joy.rows.map(r=>[`조이플레이어_${r.machine}`,numOrBlank(r.output)])
- ],[20,12]);
+ ],[20,12],"95B3D7");
 
  addSheet(wb,"UFO",[
    ["기계명","총판","배출량"],
@@ -750,7 +764,7 @@ $("exportExcel").onclick=()=>{
      [`UFO_${r.machine} L`,numOrBlank(r.leftTotal),numOrBlank(r.leftOutput)],
      [`UFO_${r.machine} R`,numOrBlank(r.rightTotal),numOrBlank(r.rightOutput)]
    ])
- ],[18,12,12]);
+ ],[18,12,12],"92CDDC");
 
  const now=new Date();
  const stamp=`${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}`;
