@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#f5f5f7">
-<title>짱오락실 서면점 정산 입력기 v1.0</title>
+<title>짱오락실 서면점 정산 입력기 v1.1</title>
 <style>
 :root{
   --bg:#f5f5f7;--card:#fff;--text:#111;--sub:#6b6b70;--line:#d8d8dc;
@@ -68,7 +68,7 @@ hr{border:0;border-top:1px solid #eee;margin:15px 0}
 </head>
 <body>
 <div class="wrap">
-  <h1>짱오락실 서면점 정산 입력기 v1.0</h1>
+  <h1>짱오락실 서면점 정산 입력기 v1.1</h1>
   <div class="sub">현장 입력은 한 번만. 데이터는 이 브라우저에 자동 저장.</div>
 
   <!-- HOME -->
@@ -84,11 +84,13 @@ hr{border:0;border-top:1px solid #eee;margin:15px 0}
 
   <!-- TIME SALES -->
   <div id="timeMode" class="hidden">
+
+    <!-- 1. 시간 선택 -->
     <section class="card">
       <div class="top">
         <div>
           <div class="section-title">시간매출</div>
-          <div class="small">17시 / 20시 / 22시 등 시간별로 따로 저장됨</div>
+          <div class="small">몇 시 데이터인지 먼저 선택한 뒤 짱프렌즈 누적값 입력</div>
         </div>
         <button class="back" id="timeHome">← 처음</button>
       </div>
@@ -96,26 +98,19 @@ hr{border:0;border-top:1px solid #eee;margin:15px 0}
       <label>시간</label>
       <input id="timeHour" type="number" inputmode="numeric" min="0" max="23" placeholder="예: 17">
 
-      <label>카니발 매출 (원)</label>
-      <input id="carnivalSales" type="number" inputmode="numeric" placeholder="예: 220000">
-
-      <button class="primary" id="startTimeSales" style="width:100%;margin-top:14px">짱프렌즈 매출 입력 시작</button>
+      <button class="primary" id="startTimeSales" style="width:100%;margin-top:14px">매출값 입력 시작</button>
       <div class="status" id="timeSetupStatus"></div>
     </section>
 
+    <!-- 2. 짱프렌즈 누적 매출값 입력 -->
     <section class="card hidden" id="timeEntryCard">
       <div class="top">
         <div class="name" id="timeMachineTitle"></div>
         <div class="progress" id="timeProgress"></div>
       </div>
 
-      <label>매출값</label>
+      <label>누적 매출값</label>
       <input id="timeSalesInput" type="number" inputmode="numeric" pattern="[0-9]*" placeholder="숫자 입력">
-
-      <div class="money-box">
-        <div class="raw" id="timeRawSum">입력합계 0</div>
-        <div class="won" id="timeWonSum">0 원</div>
-      </div>
 
       <div class="controls">
         <button id="timePrev">← 이전</button>
@@ -124,6 +119,7 @@ hr{border:0;border-top:1px solid #eee;margin:15px 0}
       <div class="status" id="timeStatus"></div>
     </section>
 
+    <!-- 3. 결과 -->
     <section class="card hidden" id="timeResultCard">
       <div class="top">
         <strong>시간매출 결과</strong>
@@ -132,14 +128,30 @@ hr{border:0;border-top:1px solid #eee;margin:15px 0}
 
       <div class="result-buttons">
         <button id="timeMissing">미입력 찾기</button>
-        <button class="ok" id="timeExcel">📗 XLSX 저장</button>
         <button id="timeCalc">합계 캡처 화면</button>
-        <button class="blue" id="timeMessage">메시지 보기/복사</button>
+        <button class="ok" id="timeExcel" style="grid-column:1/-1">📗 XLSX 저장</button>
       </div>
+      <div class="small">합계는 입력한 누적값의 합계이며, 실제 보고 매출과는 별개입니다.</div>
+      <button class="danger" id="timeReset" style="width:100%;margin-top:12px">이 시간 데이터 삭제</button>
+    </section>
+
+    <!-- 4. 보고용 매출 메시지 -->
+    <section class="card">
+      <div class="section-title">시간매출 메시지</div>
+      <div class="small">회사 시트에서 계산된 실제 매출값을 입력</div>
+
+      <label>시간</label>
+      <input id="timeMessageHour" type="number" inputmode="numeric" min="0" max="23" placeholder="예: 17">
+
+      <label>코코짱 실제 매출 (원)</label>
+      <input id="timeActualSales" type="number" inputmode="numeric" placeholder="예: 658000">
+
+      <label>카니발 매출 (원)</label>
+      <input id="timeMessageCarnival" type="number" inputmode="numeric" placeholder="예: 220000">
 
       <div class="message" id="messagePreview"></div>
-
-      <button class="danger" id="timeReset" style="width:100%;margin-top:12px">이 시간 데이터 삭제</button>
+      <button class="blue" id="timeMessageCopy" style="width:100%;margin-top:12px">메시지 복사</button>
+      <div class="status" id="timeMessageStatus"></div>
     </section>
   </div>
 
@@ -198,18 +210,20 @@ hr{border:0;border-top:1px solid #eee;margin:15px 0}
       <button class="ok" id="exportExcel" style="width:100%;margin-top:12px">📗 전체 입력값 XLSX 저장</button>
     </section>
 
-    <!-- 5. 카니발 매출 입력 -->
-    <section class="card">
-      <div class="section-title">카니발 매출</div>
-      <label>마감 카니발 매출 (원)</label>
-      <input id="closeCarnivalSales" type="number" inputmode="numeric" placeholder="예: 995000">
-    </section>
-
-    <!-- 6. 마감 매출 메시지 -->
+    <!-- 5. 마감 매출 메시지 -->
     <section class="card">
       <div class="section-title">마감 매출 메시지</div>
+      <div class="small">회사 시트에서 계산된 실제 매출값을 입력</div>
+
+      <label>코코짱 실제 매출 (원)</label>
+      <input id="closeActualSales" type="number" inputmode="numeric" placeholder="예: 2147000">
+
+      <label>카니발 매출 (원)</label>
+      <input id="closeCarnivalSales" type="number" inputmode="numeric" placeholder="예: 995000">
+
       <div class="message" id="closeMessagePreview"></div>
       <button class="blue" id="closeMessage" style="width:100%;margin-top:12px">메시지 복사</button>
+      <div class="status" id="closeMessageStatus"></div>
     </section>
 
     <!-- 7. 현재 기계군 초기화 -->
@@ -266,21 +280,28 @@ $("resetEverything").onclick=()=>{
   // 시간매출 데이터
   localStorage.removeItem("arcade_time_sales_v1");
   timeStore={};
+  timeMessageStore={};
+  closeMessageStore={actual:"",carnival:""};
   timeHour=null;
   timeIndex=0;
   $("timeHour").value="";
-  $("carnivalSales").value="";
   $("timeEntryCard").classList.add("hidden");
   $("timeResultCard").classList.add("hidden");
   $("timeSetupStatus").textContent="";
 
   // 마감 데이터
   localStorage.removeItem("arcade_input_proto_v2");
-  localStorage.removeItem("arcade_close_carnival");
+  
+  localStorage.removeItem("arcade_time_message_v1");
+  localStorage.removeItem("arcade_close_message_v1");
   all={};
   type=null;
   index=0;
+  $("closeActualSales").value="";
   $("closeCarnivalSales").value="";
+  $("timeMessageHour").value="";
+  $("timeActualSales").value="";
+  $("timeMessageCarnival").value="";
   document.querySelectorAll(".machine-btn").forEach(b=>b.classList.remove("active"));
   $("entryCard").classList.add("hidden");
   $("resultsCard").classList.add("hidden");
@@ -343,16 +364,18 @@ const pad=n=>String(n).padStart(2,"0");
 
 /* ---------- 시간매출 ---------- */
 const TIME_KEY="arcade_time_sales_v1";
+const TIME_MSG_KEY="arcade_time_message_v1";
 let timeStore=JSON.parse(localStorage.getItem(TIME_KEY)||"{}");
+let timeMessageStore=JSON.parse(localStorage.getItem(TIME_MSG_KEY)||"{}");
 let timeHour=null;
 let timeIndex=0;
 
 function saveTimeStore(){localStorage.setItem(TIME_KEY,JSON.stringify(timeStore))}
+function saveTimeMessageStore(){localStorage.setItem(TIME_MSG_KEY,JSON.stringify(timeMessageStore))}
 function ensureTime(hour){
   const key=String(hour);
   if(!timeStore[key]){
     timeStore[key]={
-      carnival:"",
       index:0,
       rows:Array.from({length:29},(_,i)=>({machine:i+1,sales:""}))
     };
@@ -367,20 +390,7 @@ function timeRawTotal(){
   return timeData().rows.reduce((s,r)=>s+(r.sales===""?0:Number(r.sales)||0),0);
 }
 function timeWonTotal(){ return timeRawTotal()*100; }
-function updateTimeSum(){
-  $("timeRawSum").textContent=`입력합계 ${timeRawTotal().toLocaleString("ko-KR")}`;
-  $("timeWonSum").textContent=`${timeWonTotal().toLocaleString("ko-KR")} 원`;
-  updateMessage();
-}
-function makeMessage(){
-  const t=String(timeHour??"");
-  const carnival=Number(timeData().carnival||0);
-  return `${t}시 코코짱 매출입니다.\n\n${timeWonTotal().toLocaleString("ko-KR")} 원 입니다.\n\n\n${t}시 카니발 매출입니다.\n\n${carnival.toLocaleString("ko-KR")} 원 입니다.`;
-}
-function updateMessage(){
-  if(timeHour===null) return;
-  $("messagePreview").textContent=makeMessage();
-}
+
 function renderTime(){
   const d=timeData(), row=d.rows[timeIndex];
   $("timeMachineTitle").textContent=`짱프렌즈_${String(timeIndex+1).padStart(2,"0")}`;
@@ -391,7 +401,6 @@ function renderTime(){
   $("timeStatus").textContent="";
   const completed=d.rows.filter(r=>r.sales!=="").length;
   $("timeDone").textContent=`${completed} / 29 완료`;
-  updateTimeSum();
   setTimeout(()=>$("timeSalesInput").focus(),70);
 }
 function commitTime(){
@@ -399,9 +408,7 @@ function commitTime(){
   const d=timeData();
   d.rows[timeIndex].sales=$("timeSalesInput").value.trim();
   d.index=timeIndex;
-  d.carnival=$("carnivalSales").value.trim();
   saveTimeStore();
-  updateTimeSum();
 }
 $("startTimeSales").onclick=()=>{
   const h=$("timeHour").value.trim();
@@ -411,8 +418,6 @@ $("startTimeSales").onclick=()=>{
   }
   timeHour=Number(h);
   const d=ensureTime(timeHour);
-  if($("carnivalSales").value.trim()!=="") d.carnival=$("carnivalSales").value.trim();
-  $("carnivalSales").value=d.carnival??"";
   timeIndex=d.index||0;
   saveTimeStore();
   $("timeEntryCard").classList.remove("hidden");
@@ -420,13 +425,6 @@ $("startTimeSales").onclick=()=>{
   $("timeSetupStatus").textContent=`${timeHour}시 데이터 열림 ✓`;
   renderTime();
   $("timeEntryCard").scrollIntoView({behavior:"smooth"});
-};
-$("carnivalSales").oninput=()=>{
-  if(timeHour!==null){
-    timeData().carnival=$("carnivalSales").value.trim();
-    saveTimeStore();
-    updateMessage();
-  }
 };
 $("timeNext").onclick=()=>{
   if($("timeSalesInput").value.trim()===""){
@@ -452,17 +450,13 @@ $("timeMissing").onclick=()=>{
 $("timeCalc").onclick=()=>{
   commitTime();
   const vals=timeData().rows.map(r=>r.sales).filter(v=>v!=="").map(Number);
-  $("calcTitle").textContent=`${timeHour}시 코코짱 매출 합계`;
-  $("calcText").textContent=vals.map(v=>v.toLocaleString("ko-KR")).join(" + ");
+  $("calcTitle").textContent=`${timeHour}시 짱프렌즈 누적값 합계`;
+  $("calcText").textContent=vals.length
+    ? vals.map(v=>v.toLocaleString("ko-KR")).join(" + ")
+    : "입력된 매출값이 없음";
   $("calcSum").textContent=`= ${timeWonTotal().toLocaleString("ko-KR")} 원`;
   $("calcCard").classList.remove("hidden");
   $("calcCard").scrollIntoView({behavior:"smooth"});
-};
-$("timeMessage").onclick=()=>{
-  commitTime();
-  const msg=makeMessage();
-  copyText(msg,`${timeHour}시 매출 메시지`,$("timeStatus"));
-  $("messagePreview").textContent=msg;
 };
 $("timeExcel").onclick=()=>{
   commitTime();
@@ -483,16 +477,66 @@ $("timeExcel").onclick=()=>{
 };
 $("timeReset").onclick=()=>{
   if(timeHour===null) return;
-  if(confirm(`${timeHour}시 짱프렌즈/카니발 데이터를 전부 삭제할까?`)){
+  if(confirm(`${timeHour}시 짱프렌즈 입력값을 전부 삭제할까?`)){
     delete timeStore[String(timeHour)];
     saveTimeStore();
-    $("carnivalSales").value="";
     timeIndex=0;
     ensureTime(timeHour);
     saveTimeStore();
     renderTime();
   }
 };
+
+/* 시간매출 보고 메시지 */
+function ensureTimeMessage(hour){
+  const key=String(hour);
+  if(!timeMessageStore[key]) timeMessageStore[key]={actual:"",carnival:""};
+  return timeMessageStore[key];
+}
+function makeTimeMessage(){
+  const h=$("timeMessageHour").value.trim();
+  const actual=Number($("timeActualSales").value||0);
+  const carnival=Number($("timeMessageCarnival").value||0);
+  if(h==="") return "시간과 실제 매출값을 입력하면 메시지가 여기에 표시됩니다.";
+  return `${h}시 코코짱 매출입니다.\n\n${actual.toLocaleString("ko-KR")} 원 입니다.\n\n\n${h}시 카니발 매출입니다.\n\n${carnival.toLocaleString("ko-KR")} 원 입니다.`;
+}
+function updateTimeMessagePreview(){
+  $("messagePreview").textContent=makeTimeMessage();
+}
+function saveCurrentTimeMessage(){
+  const h=$("timeMessageHour").value.trim();
+  if(h==="") return;
+  const d=ensureTimeMessage(h);
+  d.actual=$("timeActualSales").value.trim();
+  d.carnival=$("timeMessageCarnival").value.trim();
+  saveTimeMessageStore();
+}
+function loadTimeMessageHour(){
+  const h=$("timeMessageHour").value.trim();
+  if(h==="" || Number(h)<0 || Number(h)>23){
+    updateTimeMessagePreview();
+    return;
+  }
+  const d=ensureTimeMessage(h);
+  $("timeActualSales").value=d.actual??"";
+  $("timeMessageCarnival").value=d.carnival??"";
+  updateTimeMessagePreview();
+}
+$("timeMessageHour").addEventListener("change",loadTimeMessageHour);
+$("timeMessageHour").addEventListener("input",updateTimeMessagePreview);
+$("timeActualSales").addEventListener("input",()=>{saveCurrentTimeMessage();updateTimeMessagePreview();});
+$("timeMessageCarnival").addEventListener("input",()=>{saveCurrentTimeMessage();updateTimeMessagePreview();});
+$("timeMessageCopy").onclick=()=>{
+  saveCurrentTimeMessage();
+  const h=$("timeMessageHour").value.trim();
+  if(h===""){
+    $("timeMessageStatus").textContent="시간을 먼저 입력해줘.";
+    return;
+  }
+  const msg=makeTimeMessage();
+  copyText(msg,`${h}시 매출 메시지`,$("timeMessageStatus"));
+};
+updateTimeMessagePreview();
 
 /* ---------- 마감 ---------- */
 const CONFIG={
@@ -535,23 +579,26 @@ function ensure(t){
 }
 function persist(){localStorage.setItem(KEY,JSON.stringify(all))}
 
-function closeRawTotal(){
-  ensure("friends");
-  return all.friends.rows.reduce((s,r)=>s+(r.sales===""?0:Number(r.sales)||0),0);
-}
-function closeWonTotal(){ return closeRawTotal()*100; }
-function getCloseCarnival(){
-  return localStorage.getItem("arcade_close_carnival") || "";
-}
-function setCloseCarnival(v){
-  localStorage.setItem("arcade_close_carnival", v);
+const CLOSE_MSG_KEY="arcade_close_message_v1";
+let closeMessageStore=JSON.parse(localStorage.getItem(CLOSE_MSG_KEY)||'{"actual":"","carnival":""}');
+
+function saveCloseMessageStore(){
+  localStorage.setItem(CLOSE_MSG_KEY,JSON.stringify(closeMessageStore));
 }
 function makeCloseMessage(){
-  const carnival = Number(getCloseCarnival()||0);
-  return `마감 코코짱 매출입니다.\n\n${closeWonTotal().toLocaleString("ko-KR")} 원 입니다.\n\n\n마감 카니발 매출입니다.\n\n${carnival.toLocaleString("ko-KR")} 원 입니다.`;
+  const actual=Number(closeMessageStore.actual||0);
+  const carnival=Number(closeMessageStore.carnival||0);
+  return `마감 코코짱 매출입니다.
+
+${actual.toLocaleString("ko-KR")} 원 입니다.
+
+
+마감 카니발 매출입니다.
+
+${carnival.toLocaleString("ko-KR")} 원 입니다.`;
 }
 function updateCloseMessage(){
-  $("closeMessagePreview").textContent = makeCloseMessage();
+  $("closeMessagePreview").textContent=makeCloseMessage();
 }
 
 function val(id){return $(id).value.trim()}
@@ -647,7 +694,6 @@ function commit(){
  const c=CONFIG[type],row=all[type].rows[index];
  c.fields.forEach(f=>row[f.key]=val("f_"+f.key));
  all[type].index=index;persist();
- if(type==="friends") updateCloseMessage();
 }
 function completeRow(){
  const c=CONFIG[type];
@@ -777,8 +823,12 @@ if($("resetAll")) $("resetAll").onclick=()=>{
  if(confirm("짱프렌즈·잼나3·미니·조플·UFO의 모든 마감 입력값을 전부 삭제할까?")){
    const again=confirm("진짜 전체 삭제할까? 되돌릴 수 없어.");
    if(!again)return;
-   all={};localStorage.removeItem(KEY);localStorage.removeItem("arcade_close_carnival");
-   $("closeCarnivalSales").value="";
+   all={};localStorage.removeItem(KEY);
+   $("closeActualSales").value="";
+  $("closeCarnivalSales").value="";
+  $("timeMessageHour").value="";
+  $("timeActualSales").value="";
+  $("timeMessageCarnival").value="";
    type=null;index=0;
    document.querySelectorAll(".machine-btn").forEach(b=>b.classList.remove("active"));
    $("entryCard").classList.add("hidden");$("resultsCard").classList.add("hidden");
@@ -788,17 +838,26 @@ if($("resetAll")) $("resetAll").onclick=()=>{
  }
 };
 
-$("closeCarnivalSales").value = getCloseCarnival();
+$("closeActualSales").value=closeMessageStore.actual??"";
+$("closeCarnivalSales").value=closeMessageStore.carnival??"";
+
+$("closeActualSales").oninput=()=>{
+  closeMessageStore.actual=$("closeActualSales").value.trim();
+  saveCloseMessageStore();
+  updateCloseMessage();
+};
 $("closeCarnivalSales").oninput=()=>{
-  setCloseCarnival($("closeCarnivalSales").value.trim());
+  closeMessageStore.carnival=$("closeCarnivalSales").value.trim();
+  saveCloseMessageStore();
   updateCloseMessage();
 };
 $("closeMessage").onclick=()=>{
-  if(type) commit();
-  setCloseCarnival($("closeCarnivalSales").value.trim());
+  closeMessageStore.actual=$("closeActualSales").value.trim();
+  closeMessageStore.carnival=$("closeCarnivalSales").value.trim();
+  saveCloseMessageStore();
   const msg=makeCloseMessage();
   $("closeMessagePreview").textContent=msg;
-  copyText(msg,"마감 매출 메시지", type ? $("status") : null);
+  copyText(msg,"마감 매출 메시지",$("closeMessageStatus"));
 };
 updateCloseMessage();
 
