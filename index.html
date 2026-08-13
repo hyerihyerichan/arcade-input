@@ -9,112 +9,476 @@
 <style>
 :root{
   --bg:#f5f5f7;--card:#fff;--text:#111;--sub:#6b6b70;--line:#d8d8dc;
-  --accent:#111;--soft:#ececef;--danger:#b42318;--ok:#087a3e;
+  --soft:#ececef;--danger:#b42318;--ok:#087a3e;--blue:#1769e0;
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--text);
 font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif}
-.wrap{max-width:560px;margin:auto;padding:18px 14px 50px}
+.wrap{max-width:560px;margin:auto;padding:18px 14px 60px}
 h1{font-size:23px;margin:3px 0}.sub{font-size:13px;color:var(--sub);margin:5px 0 16px}
 .card{background:var(--card);border-radius:18px;padding:16px;margin:0 0 14px;
 box-shadow:0 1px 6px rgba(0,0,0,.07)}
+.hidden{display:none!important}
+.mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.mode-btn{min-height:120px;border:0;border-radius:18px;background:var(--soft);font-size:22px;font-weight:900}
+.mode-btn small{display:block;margin-top:8px;font-size:13px;color:var(--sub);font-weight:700}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .machine-btn{padding:18px 10px;border:0;border-radius:15px;background:var(--soft);
 font-size:17px;font-weight:800}.machine-btn.active{background:#111;color:#fff}
 .top{display:flex;justify-content:space-between;align-items:center;gap:12px}
-.name{font-size:26px;font-weight:900}.progress{font-size:14px;color:var(--sub)}
+.name{font-size:25px;font-weight:900}.progress{font-size:14px;color:var(--sub)}
 label{display:block;font-size:15px;font-weight:800;margin:15px 0 7px}
-input{width:100%;font-size:28px;font-weight:800;padding:13px 14px;border:2px solid var(--line);
+input,select{width:100%;font-size:27px;font-weight:800;padding:13px 14px;border:2px solid var(--line);
 border-radius:14px;background:#fff;outline:none}
-input:focus{border-color:#222}
+select{font-size:20px}
+input:focus,select:focus{border-color:#222}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .side-title{text-align:center;font-size:14px;font-weight:900;margin-top:14px}
 .controls{display:grid;grid-template-columns:1fr 1.4fr;gap:10px;margin-top:16px}
 button{border:0;border-radius:14px;padding:14px 11px;background:var(--soft);font-size:16px;font-weight:850}
 button.primary{background:#111;color:white}
+button.blue{background:var(--blue);color:white}
 button.danger{background:#fff0f0;color:var(--danger)}
 button.ok{background:#eaf8ef;color:var(--ok)}
+button:disabled{opacity:.45}
 .status{min-height:20px;font-size:13px;color:var(--sub);margin-top:9px}
+.warn{margin-top:10px;padding:10px 12px;border-radius:12px;background:#fff1f0;color:#b42318;
+font-size:14px;font-weight:900;border:1px solid #f3b7b1}
 .result-buttons{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}
 .result-buttons button{font-size:14px}
-textarea{width:100%;height:190px;border:1px solid var(--line);border-radius:12px;
+textarea{width:100%;height:230px;border:1px solid var(--line);border-radius:12px;
 padding:12px;font-size:15px;background:#fafafa;resize:vertical}
-.hidden{display:none}
 .small{font-size:12px;color:var(--sub);margin-top:8px}
 .calc{white-space:pre-wrap;word-break:break-word;background:#111;color:#fff;border-radius:16px;
 padding:17px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:18px;line-height:1.55}
 .sum{font-size:32px;font-weight:900;text-align:right;margin-top:14px}
+.money-box{background:#111;color:#fff;border-radius:18px;padding:18px;margin-top:14px;text-align:center}
+.money-box .raw{font-size:13px;opacity:.75}
+.money-box .won{font-size:34px;font-weight:950;margin-top:5px}
+.message{white-space:pre-wrap;background:#f8f8fa;border:1px solid #e3e3e7;border-radius:15px;padding:16px;
+font-size:16px;line-height:1.65;margin-top:12px}
 .header-actions{display:flex;gap:7px}
 .header-actions button{padding:8px 11px;font-size:13px}
+.back{padding:8px 11px;font-size:13px}
 hr{border:0;border-top:1px solid #eee;margin:15px 0}
+.section-title{font-size:18px;font-weight:900}
+.badge{display:inline-block;border-radius:999px;background:#efeff3;padding:5px 9px;font-size:12px;font-weight:800;color:#555}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body>
 <div class="wrap">
   <h1>오락실 정산 입력기</h1>
-  <div class="sub">현장 입력 → 엑셀 세로복사. 모든 값은 이 브라우저에 자동 저장.</div>
+  <div class="sub">현장 입력은 한 번만. 데이터는 이 브라우저에 자동 저장.</div>
 
-  <section class="card">
-    <strong>기계 선택</strong>
-    <div class="grid" style="margin-top:11px">
-      <button class="machine-btn" data-type="friends">짱프렌즈<br><small>29대</small></button>
-      <button class="machine-btn" data-type="jamna">잼나3<br><small>4대</small></button>
-      <button class="machine-btn" data-type="mini">미니<br><small>40대 · 좌/우</small></button>
-      <button class="machine-btn" data-type="joy">조플<br><small>20대</small></button>
-      <button class="machine-btn" data-type="ufo" style="grid-column:1/-1">UFO<br><small>15대 · 좌/우</small></button>
+  <!-- HOME -->
+  <section class="card" id="homeCard">
+    <div class="section-title">작업 선택</div>
+    <div class="mode-grid" style="margin-top:13px">
+      <button class="mode-btn" id="modeTime">시간매출<small>짱프렌즈 매출 + 카니발</small></button>
+      <button class="mode-btn" id="modeClose">마감<small>전체 기계 정산</small></button>
     </div>
-    <button class="ok" id="exportExcel" style="width:100%;margin-top:12px">📗 전체 입력값 엑셀 파일로 저장</button>
-    <div class="small">Excel에서 바로 열리는 통합 파일(.xml)로 저장됩니다. 로그인 필요 없음.</div>
+    <button class="danger" id="resetEverything" style="width:100%;margin-top:14px">🗑️ 전체 데이터 초기화</button>
+    <div class="small">시간매출 + 마감 데이터를 모두 삭제합니다.</div>
   </section>
 
-  <section class="card hidden" id="entryCard">
-    <div class="top">
-      <div class="name" id="machineTitle"></div>
-      <div class="progress" id="progress"></div>
-    </div>
-    <div id="fields"></div>
-    <div class="controls">
-      <button id="prev">← 이전</button>
-      <button class="primary" id="next">저장 후 다음 →</button>
-    </div>
-    <div class="status" id="status"></div>
-  </section>
+  <!-- TIME SALES -->
+  <div id="timeMode" class="hidden">
+    <section class="card">
+      <div class="top">
+        <div>
+          <div class="section-title">시간매출</div>
+          <div class="small">17시 / 20시 / 22시 등 시간별로 따로 저장됨</div>
+        </div>
+        <button class="back" id="timeHome">← 처음</button>
+      </div>
 
-  <section class="card hidden" id="resultsCard">
-    <div class="top">
-      <strong>엑셀용 결과</strong>
-      <span class="progress" id="done"></span>
-    </div>
-    <div class="result-buttons" id="resultButtons"></div>
-    <div class="small">세로복사는 한 열로, 좌/우 2열 복사는 엑셀에서 왼쪽·오른쪽 열로 나뉘어 붙여넣어짐.</div>
-    <hr>
-    <div class="result-buttons">
-      <button id="missing">미입력 찾기</button>
-      <button class="danger" id="reset">현재 기계군 초기화</button>
-    </div>
-  </section>
+      <label>시간</label>
+      <input id="timeHour" type="number" inputmode="numeric" min="0" max="23" placeholder="예: 17">
 
+      <label>카니발 매출 (원)</label>
+      <input id="carnivalSales" type="number" inputmode="numeric" placeholder="예: 220000">
+
+      <button class="primary" id="startTimeSales" style="width:100%;margin-top:14px">짱프렌즈 매출 입력 시작</button>
+      <div class="status" id="timeSetupStatus"></div>
+    </section>
+
+    <section class="card hidden" id="timeEntryCard">
+      <div class="top">
+        <div class="name" id="timeMachineTitle"></div>
+        <div class="progress" id="timeProgress"></div>
+      </div>
+
+      <label>매출값</label>
+      <input id="timeSalesInput" type="number" inputmode="numeric" pattern="[0-9]*" placeholder="숫자 입력">
+
+      <div class="money-box">
+        <div class="raw" id="timeRawSum">입력합계 0</div>
+        <div class="won" id="timeWonSum">0 원</div>
+      </div>
+
+      <div class="controls">
+        <button id="timePrev">← 이전</button>
+        <button class="primary" id="timeNext">저장 후 다음 →</button>
+      </div>
+      <div class="status" id="timeStatus"></div>
+    </section>
+
+    <section class="card hidden" id="timeResultCard">
+      <div class="top">
+        <strong>시간매출 결과</strong>
+        <span class="progress" id="timeDone"></span>
+      </div>
+
+      <div class="result-buttons">
+        <button id="timeMissing">미입력 찾기</button>
+        <button class="ok" id="timeExcel">📗 XLSX 저장</button>
+        <button id="timeCalc">합계 캡처 화면</button>
+        <button class="blue" id="timeMessage">메시지 보기/복사</button>
+      </div>
+
+      <div class="message" id="messagePreview"></div>
+
+      <button class="danger" id="timeReset" style="width:100%;margin-top:12px">이 시간 데이터 삭제</button>
+    </section>
+  </div>
+
+  <!-- CLOSING -->
+  <div id="closeMode" class="hidden">
+
+    <!-- 1. 기계 선택 -->
+    <section class="card">
+      <div class="top">
+        <div>
+          <div class="section-title">마감 정산</div>
+          <div class="small">기계군을 선택해서 입력</div>
+        </div>
+        <button class="back" id="closeHome">← 처음</button>
+      </div>
+
+      <div class="grid" style="margin-top:13px">
+        <button class="machine-btn" data-type="friends">짱프렌즈<br><small>29대</small></button>
+        <button class="machine-btn" data-type="jamna">잼나3<br><small>4대</small></button>
+        <button class="machine-btn" data-type="mini">미니<br><small>40대 · 좌/우</small></button>
+        <button class="machine-btn" data-type="joy">조플<br><small>20대</small></button>
+        <button class="machine-btn" data-type="ufo" style="grid-column:1/-1">UFO<br><small>15대 · 좌/우</small></button>
+      </div>
+    </section>
+
+    <!-- 2. 내용 입력 -->
+    <section class="card hidden" id="entryCard">
+      <div class="top">
+        <div class="name" id="machineTitle"></div>
+        <div class="progress" id="progress"></div>
+      </div>
+      <div id="fields"></div>
+      <div class="controls">
+        <button id="prev">← 이전</button>
+        <button class="primary" id="next">저장 후 다음 →</button>
+      </div>
+      <div class="warn hidden" id="ufoTotalWarn">⚠️ 총판 금액 확인 필요</div>
+      <div class="status" id="status"></div>
+    </section>
+
+    <!-- 3. 엑셀용 결과 -->
+    <section class="card hidden" id="resultsCard">
+      <div class="top">
+        <strong>엑셀용 결과</strong>
+        <span class="progress" id="done"></span>
+      </div>
+      <div class="result-buttons" id="resultButtons"></div>
+      <div class="small">값 보기에서 텍스트를 바로 선택해서 복붙할 수 있어. 미니는 왼쪽/오른쪽 열 분리, UFO는 L/R 각각 구분.</div>
+      <hr>
+      <button id="missing" style="width:100%">미입력 찾기</button>
+    </section>
+
+    <!-- 4. 전체 입력값 XLSX 저장 -->
+    <section class="card">
+      <div class="section-title">전체 입력값 저장</div>
+      <button class="ok" id="exportExcel" style="width:100%;margin-top:12px">📗 전체 입력값 XLSX 저장</button>
+    </section>
+
+    <!-- 5. 카니발 매출 입력 -->
+    <section class="card">
+      <div class="section-title">카니발 매출</div>
+      <label>마감 카니발 매출 (원)</label>
+      <input id="closeCarnivalSales" type="number" inputmode="numeric" placeholder="예: 995000">
+    </section>
+
+    <!-- 6. 마감 매출 메시지 -->
+    <section class="card">
+      <div class="section-title">마감 매출 메시지</div>
+      <div class="message" id="closeMessagePreview"></div>
+      <button class="blue" id="closeMessage" style="width:100%;margin-top:12px">메시지 복사</button>
+    </section>
+
+    <!-- 7. 현재 기계군 초기화 -->
+    <section class="card hidden" id="resetCurrentCard">
+      <div class="section-title">현재 기계군 초기화</div>
+      <div class="small">현재 선택한 기계군의 입력값만 삭제합니다.</div>
+      <button class="danger" id="reset" style="width:100%;margin-top:12px">현재 기계군 초기화</button>
+    </section>
+
+  </div>
+
+  <!-- COMMON POPUPS -->
   <section class="card hidden" id="textCard">
     <div class="top">
       <strong id="textTitle"></strong>
-      <div class="header-actions"><button id="closeText">닫기</button></div>
+      <button id="closeText">닫기</button>
     </div>
     <textarea id="textOut" readonly></textarea>
   </section>
 
   <section class="card hidden" id="calcCard">
     <div class="top">
-      <strong>짱프렌즈 매출 계산 화면</strong>
+      <strong id="calcTitle">합계 계산 화면</strong>
       <button id="closeCalc">닫기</button>
     </div>
     <div class="calc" id="calcText"></div>
     <div class="sum" id="calcSum"></div>
-    <div class="small">회사에서 계산기 인증 화면 요구할 때 캡처용.</div>
+    <div class="small">캡처용 화면.</div>
   </section>
 </div>
 
 <script>
 (()=>{
+const $=id=>document.getElementById(id);
+
+/* ---------- 공통 ---------- */
+function showOnlyMode(mode){
+  $("homeCard").classList.toggle("hidden", mode !== "home");
+  $("timeMode").classList.toggle("hidden", mode !== "time");
+  $("closeMode").classList.toggle("hidden", mode !== "close");
+  $("textCard").classList.add("hidden");
+  $("calcCard").classList.add("hidden");
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+$("modeTime").onclick=()=>showOnlyMode("time");
+$("modeClose").onclick=()=>showOnlyMode("close");
+$("timeHome").onclick=()=>showOnlyMode("home");
+$("closeHome").onclick=()=>showOnlyMode("home");
+
+$("resetEverything").onclick=()=>{
+  if(!confirm("시간매출과 마감 데이터를 전부 초기화할까?")) return;
+  if(!confirm("진짜 전부 삭제할까? 저장 안 한 값도 모두 사라지고 되돌릴 수 없어.")) return;
+
+  // 시간매출 데이터
+  localStorage.removeItem("arcade_time_sales_v1");
+  timeStore={};
+  timeHour=null;
+  timeIndex=0;
+  $("timeHour").value="";
+  $("carnivalSales").value="";
+  $("timeEntryCard").classList.add("hidden");
+  $("timeResultCard").classList.add("hidden");
+  $("timeSetupStatus").textContent="";
+
+  // 마감 데이터
+  localStorage.removeItem("arcade_input_proto_v2");
+  localStorage.removeItem("arcade_close_carnival");
+  all={};
+  type=null;
+  index=0;
+  $("closeCarnivalSales").value="";
+  document.querySelectorAll(".machine-btn").forEach(b=>b.classList.remove("active"));
+  $("entryCard").classList.add("hidden");
+  $("resultsCard").classList.add("hidden");
+  $("resetCurrentCard").classList.add("hidden");
+
+  updateCloseMessage();
+  alert("전체 데이터 초기화 완료");
+};
+
+$("closeText").onclick=()=>$("textCard").classList.add("hidden");
+$("closeCalc").onclick=()=>$("calcCard").classList.add("hidden");
+
+function copyFallback(text,title){
+  $("textTitle").textContent=title+" · 길게 눌러 복사";
+  $("textOut").value=text;
+  $("textCard").classList.remove("hidden");
+  $("textOut").focus(); $("textOut").select();
+  $("textCard").scrollIntoView({behavior:"smooth"});
+}
+async function copyText(text,title,statusEl){
+  try{
+    await navigator.clipboard.writeText(text);
+    if(statusEl) statusEl.textContent=title+" 복사됨 ✓";
+  }catch(e){
+    copyFallback(text,title);
+  }
+}
+function numOrBlank(v){
+  if(v==="" || v===null || v===undefined) return "";
+  const n=Number(v);
+  return Number.isFinite(n)?n:v;
+}
+function addSheet(wb,name,data,widths){
+  const ws=XLSX.utils.aoa_to_sheet(data);
+  ws["!cols"]=widths.map(w=>({wch:w}));
+  XLSX.utils.book_append_sheet(wb,ws,name);
+}
+function excelReady(){
+  if(typeof XLSX === "undefined"){
+    alert("엑셀 변환 기능을 불러오지 못했어. 인터넷 연결 확인 후 다시 시도해줘.");
+    return false;
+  }
+  return true;
+}
+const pad=n=>String(n).padStart(2,"0");
+
+/* ---------- 시간매출 ---------- */
+const TIME_KEY="arcade_time_sales_v1";
+let timeStore=JSON.parse(localStorage.getItem(TIME_KEY)||"{}");
+let timeHour=null;
+let timeIndex=0;
+
+function saveTimeStore(){localStorage.setItem(TIME_KEY,JSON.stringify(timeStore))}
+function ensureTime(hour){
+  const key=String(hour);
+  if(!timeStore[key]){
+    timeStore[key]={
+      carnival:"",
+      index:0,
+      rows:Array.from({length:29},(_,i)=>({machine:i+1,sales:""}))
+    };
+  }
+  if(!Array.isArray(timeStore[key].rows) || timeStore[key].rows.length!==29){
+    timeStore[key].rows=Array.from({length:29},(_,i)=>timeStore[key].rows?.[i]||{machine:i+1,sales:""});
+  }
+  return timeStore[key];
+}
+function timeData(){return ensureTime(timeHour)}
+function timeRawTotal(){
+  return timeData().rows.reduce((s,r)=>s+(r.sales===""?0:Number(r.sales)||0),0);
+}
+function timeWonTotal(){ return timeRawTotal()*100; }
+function updateTimeSum(){
+  $("timeRawSum").textContent=`입력합계 ${timeRawTotal().toLocaleString("ko-KR")}`;
+  $("timeWonSum").textContent=`${timeWonTotal().toLocaleString("ko-KR")} 원`;
+  updateMessage();
+}
+function makeMessage(){
+  const t=String(timeHour??"");
+  const carnival=Number(timeData().carnival||0);
+  return `${t}시 코코짱 매출입니다.\n\n${timeWonTotal().toLocaleString("ko-KR")} 원 입니다.\n\n\n${t}시 카니발 매출입니다.\n\n${carnival.toLocaleString("ko-KR")} 원 입니다.`;
+}
+function updateMessage(){
+  if(timeHour===null) return;
+  $("messagePreview").textContent=makeMessage();
+}
+function renderTime(){
+  const d=timeData(), row=d.rows[timeIndex];
+  $("timeMachineTitle").textContent=`짱프렌즈_${String(timeIndex+1).padStart(2,"0")}`;
+  $("timeProgress").textContent=`${timeIndex+1} / 29`;
+  $("timeSalesInput").value=row.sales??"";
+  $("timePrev").disabled=timeIndex===0;
+  $("timeNext").textContent=timeIndex===28?"저장 완료 ✓":"저장 후 다음 →";
+  $("timeStatus").textContent="";
+  const completed=d.rows.filter(r=>r.sales!=="").length;
+  $("timeDone").textContent=`${completed} / 29 완료`;
+  updateTimeSum();
+  setTimeout(()=>$("timeSalesInput").focus(),70);
+}
+function commitTime(){
+  if(timeHour===null) return;
+  const d=timeData();
+  d.rows[timeIndex].sales=$("timeSalesInput").value.trim();
+  d.index=timeIndex;
+  d.carnival=$("carnivalSales").value.trim();
+  saveTimeStore();
+  updateTimeSum();
+}
+$("startTimeSales").onclick=()=>{
+  const h=$("timeHour").value.trim();
+  if(h==="" || Number(h)<0 || Number(h)>23){
+    $("timeSetupStatus").textContent="시간을 0~23 사이 숫자로 입력해줘.";
+    return;
+  }
+  timeHour=Number(h);
+  const d=ensureTime(timeHour);
+  if($("carnivalSales").value.trim()!=="") d.carnival=$("carnivalSales").value.trim();
+  $("carnivalSales").value=d.carnival??"";
+  timeIndex=d.index||0;
+  saveTimeStore();
+  $("timeEntryCard").classList.remove("hidden");
+  $("timeResultCard").classList.remove("hidden");
+  $("timeSetupStatus").textContent=`${timeHour}시 데이터 열림 ✓`;
+  renderTime();
+  $("timeEntryCard").scrollIntoView({behavior:"smooth"});
+};
+$("carnivalSales").oninput=()=>{
+  if(timeHour!==null){
+    timeData().carnival=$("carnivalSales").value.trim();
+    saveTimeStore();
+    updateMessage();
+  }
+};
+$("timeNext").onclick=()=>{
+  if($("timeSalesInput").value.trim()===""){
+    $("timeStatus").textContent="매출값을 입력해줘.";
+    return;
+  }
+  commitTime();
+  if(timeIndex<28){timeIndex++; timeData().index=timeIndex; saveTimeStore(); renderTime();}
+  else{$("timeStatus").textContent="29대 입력 완료 ✓"; renderTime();}
+};
+$("timePrev").onclick=()=>{
+  commitTime();
+  if(timeIndex>0) timeIndex--;
+  timeData().index=timeIndex; saveTimeStore(); renderTime();
+};
+$("timeMissing").onclick=()=>{
+  commitTime();
+  const i=timeData().rows.findIndex(r=>r.sales==="");
+  if(i<0){$("timeStatus").textContent="29대 전부 입력되어 있음 ✓";return;}
+  timeIndex=i; timeData().index=i; saveTimeStore(); renderTime();
+  $("timeEntryCard").scrollIntoView({behavior:"smooth"});
+};
+$("timeCalc").onclick=()=>{
+  commitTime();
+  const vals=timeData().rows.map(r=>r.sales).filter(v=>v!=="").map(Number);
+  $("calcTitle").textContent=`${timeHour}시 코코짱 매출 합계`;
+  $("calcText").textContent=vals.map(v=>v.toLocaleString("ko-KR")).join(" + ");
+  $("calcSum").textContent=`= ${timeWonTotal().toLocaleString("ko-KR")} 원`;
+  $("calcCard").classList.remove("hidden");
+  $("calcCard").scrollIntoView({behavior:"smooth"});
+};
+$("timeMessage").onclick=()=>{
+  commitTime();
+  const msg=makeMessage();
+  copyText(msg,`${timeHour}시 매출 메시지`,$("timeStatus"));
+  $("messagePreview").textContent=msg;
+};
+$("timeExcel").onclick=()=>{
+  commitTime();
+  if(!excelReady()) return;
+  const wb=XLSX.utils.book_new();
+  const data=[
+    ["기계명","매출"],
+    ...timeData().rows.map(r=>[
+      `짱프렌즈_${String(r.machine).padStart(2,"0")}`,
+      numOrBlank(r.sales)
+    ])
+  ];
+  addSheet(wb,`${timeHour}시 매출`,data,[18,14]);
+  XLSX.writeFile(wb,`${timeHour}시_코코짱_매출.xlsx`);
+  $("timeStatus").textContent="시간매출 XLSX 저장 완료 ✓";
+};
+$("timeReset").onclick=()=>{
+  if(timeHour===null) return;
+  if(confirm(`${timeHour}시 짱프렌즈/카니발 데이터를 전부 삭제할까?`)){
+    delete timeStore[String(timeHour)];
+    saveTimeStore();
+    $("carnivalSales").value="";
+    timeIndex=0;
+    ensureTime(timeHour);
+    saveTimeStore();
+    renderTime();
+  }
+};
+
+/* ---------- 마감 ---------- */
 const CONFIG={
  friends:{label:"짱프렌즈",count:29,fields:[
    {key:"sales",label:"누적 매출"},
@@ -140,23 +504,48 @@ const CONFIG={
 const KEY="arcade_input_proto_v2";
 let all=JSON.parse(localStorage.getItem(KEY)||"{}");
 let type=null,index=0;
-const $=id=>document.getElementById(id);
 
 function ensure(t){
  if(!all[t]){
    all[t]={index:0,rows:Array.from({length:CONFIG[t].count},(_,i)=>({machine:i+1}))};
  }
- CONFIG[t].fields.forEach(f=>all[t].rows.forEach(r=>{if(r[f.key]===undefined)r[f.key]=""}));
+ if(all[t].rows.length!==CONFIG[t].count){
+   all[t].rows=Array.from({length:CONFIG[t].count},(_,i)=>all[t].rows?.[i]||{machine:i+1});
+ }
+ CONFIG[t].fields.forEach(f=>all[t].rows.forEach((r,i)=>{
+   r.machine=i+1;
+   if(r[f.key]===undefined)r[f.key]="";
+ }));
 }
 function persist(){localStorage.setItem(KEY,JSON.stringify(all))}
+
+function closeRawTotal(){
+  ensure("friends");
+  return all.friends.rows.reduce((s,r)=>s+(r.sales===""?0:Number(r.sales)||0),0);
+}
+function closeWonTotal(){ return closeRawTotal()*100; }
+function getCloseCarnival(){
+  return localStorage.getItem("arcade_close_carnival") || "";
+}
+function setCloseCarnival(v){
+  localStorage.setItem("arcade_close_carnival", v);
+}
+function makeCloseMessage(){
+  const carnival = Number(getCloseCarnival()||0);
+  return `마감 코코짱 매출입니다.\n\n${closeWonTotal().toLocaleString("ko-KR")} 원 입니다.\n\n\n마감 카니발 매출입니다.\n\n${carnival.toLocaleString("ko-KR")} 원 입니다.`;
+}
+function updateCloseMessage(){
+  $("closeMessagePreview").textContent = makeCloseMessage();
+}
+
 function val(id){return $(id).value.trim()}
 function setType(t){
  type=t;ensure(t);index=all[t].index||0;
  document.querySelectorAll(".machine-btn").forEach(b=>b.classList.toggle("active",b.dataset.type===t));
  $("entryCard").classList.remove("hidden");$("resultsCard").classList.remove("hidden");
- $("textCard").classList.add("hidden");$("calcCard").classList.add("hidden");
+ $("resetCurrentCard").classList.remove("hidden");
  render();
- window.scrollTo({top:$("entryCard").offsetTop-10,behavior:"smooth"});
+ $("entryCard").scrollIntoView({behavior:"smooth"});
 }
 function makeInput(field,row){
  return `<label>${field.label}</label>
@@ -165,8 +554,7 @@ function makeInput(field,row){
 }
 function renderFields(c,row){
  if(c.ufo){
-   return `
-   <div class="two">
+   return `<div class="two">
     <div><div class="side-title">왼쪽</div>
       <label>총판</label><input id="f_leftTotal" type="number" inputmode="numeric" value="${row.leftTotal||""}">
       <label>배출량</label><input id="f_leftOutput" type="number" inputmode="numeric" value="${row.leftOutput||""}">
@@ -185,11 +573,52 @@ function renderFields(c,row){
  }
  return c.fields.map(f=>makeInput(f,row)).join("");
 }
+
+function updateUfoTotalWarning(){
+ const warn=$("ufoTotalWarn");
+ if(!warn) return;
+ if(type!=="ufo"){
+   warn.classList.add("hidden");
+   return;
+ }
+ const l=$("f_leftTotal");
+ const r=$("f_rightTotal");
+ if(!l || !r){
+   warn.classList.add("hidden");
+   return;
+ }
+ const lv=l.value.trim();
+ const rv=r.value.trim();
+
+ // 비어있는 값은 입력 전이므로 경고하지 않고,
+ // 값이 들어온 총판 중 정확히 7자리가 아닌 경우에만 경고.
+ const badLeft=lv!=="" && lv.length!==7;
+ const badRight=rv!=="" && rv.length!==7;
+
+ if(badLeft || badRight){
+   const sides=[];
+   if(badLeft) sides.push("왼쪽");
+   if(badRight) sides.push("오른쪽");
+   warn.textContent=`⚠️ ${sides.join(" / ")} 총판 금액 확인 필요 · 7자리인지 확인`;
+   warn.classList.remove("hidden");
+ }else{
+   warn.classList.add("hidden");
+ }
+}
+
 function render(){
  const c=CONFIG[type],row=all[type].rows[index];
- $("machineTitle").textContent=`${c.label} ${String(index+1).padStart(2,"0")}`;
+ $("machineTitle").textContent=type==="friends"
+   ?`짱프렌즈_${String(index+1).padStart(2,"0")}`
+   :`${c.label} ${String(index+1).padStart(2,"0")}`;
  $("progress").textContent=`${index+1} / ${c.count}`;
  $("fields").innerHTML=renderFields(c,row);
+ if(type==="ufo"){
+   const lt=$("f_leftTotal"), rt=$("f_rightTotal");
+   if(lt) lt.addEventListener("input",updateUfoTotalWarning);
+   if(rt) rt.addEventListener("input",updateUfoTotalWarning);
+ }
+ updateUfoTotalWarning();
  $("prev").disabled=index===0;
  $("next").textContent=index===c.count-1?"저장 완료 ✓":"저장 후 다음 →";
  $("status").textContent="";
@@ -202,20 +631,11 @@ function commit(){
  const c=CONFIG[type],row=all[type].rows[index];
  c.fields.forEach(f=>row[f.key]=val("f_"+f.key));
  all[type].index=index;persist();
+ if(type==="friends") updateCloseMessage();
 }
 function completeRow(){
  const c=CONFIG[type];
  return c.fields.every(f=>val("f_"+f.key)!=="");
-}
-function copyFallback(text,title){
- $("textTitle").textContent=title+" · 길게 눌러 복사";
- $("textOut").value=text;$("textCard").classList.remove("hidden");
- $("textOut").focus();$("textOut").select();
- $("textCard").scrollIntoView({behavior:"smooth"});
-}
-async function copyText(text,title){
- try{await navigator.clipboard.writeText(text);$("status").textContent=title+" 복사됨 ✓";}
- catch(e){copyFallback(text,title)}
 }
 function vertical(keys){
  const rows=all[type].rows, out=[];
@@ -223,50 +643,63 @@ function vertical(keys){
  return out.join("\n");
 }
 function twoColumns(leftKey,rightKey){
- const rows=all[type].rows;
- return rows.map(r=>`${r[leftKey]??""}\t${r[rightKey]??""}`).join("\n");
+ return all[type].rows.map(r=>`${r[leftKey]??""}\t${r[rightKey]??""}`).join("\n");
 }
+function showText(text,title){
+ if(type) commit();
+ $("textTitle").textContent=title;
+ $("textOut").value=text;
+ $("textCard").classList.remove("hidden");
+ $("textCard").scrollIntoView({behavior:"smooth"});
+}
+
+function showFriendsCalc(){
+ if(type==="friends") commit();
+ ensure("friends");
+ const vals=all.friends.rows
+   .map(r=>r.sales)
+   .filter(v=>v!=="")
+   .map(Number)
+   .filter(v=>Number.isFinite(v));
+ const raw=vals.reduce((a,b)=>a+b,0);
+ const won=raw*100;
+ $("calcTitle").textContent="마감 코코짱 매출 합계";
+ $("calcText").textContent=vals.length
+   ? vals.map(v=>v.toLocaleString("ko-KR")).join(" + ")
+   : "입력된 매출값이 없음";
+ $("calcSum").textContent=`= ${won.toLocaleString("ko-KR")} 원`;
+ $("calcCard").classList.remove("hidden");
+ $("calcCard").scrollIntoView({behavior:"smooth"});
+}
+
 function buildResultButtons(){
  const box=$("resultButtons");box.innerHTML="";
  const add=(text,fn,primary=false)=>{
-   const b=document.createElement("button");b.textContent=text;if(primary)b.classList.add("primary");
-   b.onclick=fn;box.appendChild(b);
+   const b=document.createElement("button");b.textContent=text;
+   if(primary)b.classList.add("primary"); b.onclick=fn; box.appendChild(b);
  };
  if(type==="friends"){
-   add("매출 누적값 복사",()=>{commit();copyText(vertical(["sales"]),"매출")});
-   add("배출량 복사",()=>{commit();copyText(vertical(["output"]),"배출량")});
-   add("매출값 보기",()=>showText(vertical(["sales"]),"짱프렌즈 매출"),false);
-   add("배출값 보기",()=>showText(vertical(["output"]),"짱프렌즈 배출"),false);
-   add("매출 계산 화면",showCalc,true);
+   add("매출값 보기",()=>showText(vertical(["sales"]),"짱프렌즈 매출"),true);
+   add("배출값 보기",()=>showText(vertical(["output"]),"짱프렌즈 배출"),true);
+   add("짱프 계산기 화면",()=>showFriendsCalc());
  }else if(type==="jamna"||type==="joy"){
-   add("배출량 복사",()=>{commit();copyText(vertical(["output"]),"배출량")},true);
+   add("배출량 복사",()=>{commit();copyText(vertical(["output"]),"배출량",$("status"))},true);
    add("배출값 보기",()=>showText(vertical(["output"]),"배출량"));
  }else if(type==="mini"){
-   add("왼쪽 배출 열 복사",()=>{commit();copyText(vertical(["leftOutput"]),"미니 왼쪽 배출")});
-   add("오른쪽 배출 열 복사",()=>{commit();copyText(vertical(["rightOutput"]),"미니 오른쪽 배출")});
-   add("좌/우 2열 복사",()=>{commit();copyText(twoColumns("leftOutput","rightOutput"),"미니 좌/우 2열")},true);
-   add("2열 미리보기",()=>showText(twoColumns("leftOutput","rightOutput"),"미니 배출 좌/우 2열"));
+   add("왼쪽 배출 열 복사",()=>{commit();copyText(vertical(["leftOutput"]),"미니 왼쪽 배출",$("status"))});
+   add("오른쪽 배출 열 복사",()=>{commit();copyText(vertical(["rightOutput"]),"미니 오른쪽 배출",$("status"))});
+   add("좌/우 2열 복사",()=>{commit();copyText(twoColumns("leftOutput","rightOutput"),"미니 좌/우 2열",$("status"))},true);
  }else if(type==="ufo"){
-   add("왼쪽 총판 열 복사",()=>{commit();copyText(vertical(["leftTotal"]),"UFO 왼쪽 총판")});
-   add("오른쪽 총판 열 복사",()=>{commit();copyText(vertical(["rightTotal"]),"UFO 오른쪽 총판")});
-   add("총판 좌/우 2열 복사",()=>{commit();copyText(twoColumns("leftTotal","rightTotal"),"UFO 총판 좌/우 2열")},true);
-   add("왼쪽 배출 열 복사",()=>{commit();copyText(vertical(["leftOutput"]),"UFO 왼쪽 배출")});
-   add("오른쪽 배출 열 복사",()=>{commit();copyText(vertical(["rightOutput"]),"UFO 오른쪽 배출")});
-   add("배출 좌/우 2열 복사",()=>{commit();copyText(twoColumns("leftOutput","rightOutput"),"UFO 배출 좌/우 2열")},true);
+   add("왼쪽 총판 열 복사",()=>{commit();copyText(vertical(["leftTotal"]),"UFO 왼쪽 총판",$("status"))});
+   add("오른쪽 총판 열 복사",()=>{commit();copyText(vertical(["rightTotal"]),"UFO 오른쪽 총판",$("status"))});
+   add("총판 좌/우 2열 복사",()=>{commit();copyText(twoColumns("leftTotal","rightTotal"),"UFO 총판 좌/우 2열",$("status"))},true);
+   add("왼쪽 배출 열 복사",()=>{commit();copyText(vertical(["leftOutput"]),"UFO 왼쪽 배출",$("status"))});
+   add("오른쪽 배출 열 복사",()=>{commit();copyText(vertical(["rightOutput"]),"UFO 오른쪽 배출",$("status"))});
+   add("배출 좌/우 2열 복사",()=>{commit();copyText(twoColumns("leftOutput","rightOutput"),"UFO 배출 좌/우 2열",$("status"))},true);
  }
 }
-function showText(text,title){
- commit();$("textTitle").textContent=title;$("textOut").value=text;
- $("textCard").classList.remove("hidden");$("textCard").scrollIntoView({behavior:"smooth"});
-}
-function showCalc(){
- commit();
- const vals=all.friends.rows.map(r=>r.sales).filter(v=>v!=="").map(Number);
- $("calcText").textContent=vals.map(v=>v.toLocaleString("ko-KR")).join(" + ");
- $("calcSum").textContent="= "+vals.reduce((a,b)=>a+b,0).toLocaleString("ko-KR");
- $("calcCard").classList.remove("hidden");$("calcCard").scrollIntoView({behavior:"smooth"});
-}
 $("next").onclick=()=>{
+ updateUfoTotalWarning();
  if(!completeRow()){$("status").textContent="이 기계의 필요한 값을 전부 입력해줘.";return}
  commit();
  if(index<CONFIG[type].count-1){index++;all[type].index=index;persist();render()}
@@ -284,97 +717,75 @@ $("reset").onclick=()=>{
    delete all[type];persist();ensure(type);index=0;render();
  }
 };
-
-function escXml(v){
- return String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
-}
-function cell(v,header=false){
- const isNum = v!=="" && v!==null && v!==undefined && !isNaN(Number(v));
- const type = isNum ? "Number" : "String";
- const style = header ? ' ss:StyleID="Header"' : "";
- return `<Cell${style}><Data ss:Type="${type}">${escXml(v)}</Data></Cell>`;
-}
-function worksheet(name, headers, rows){
- let body = `<Row>${headers.map(h=>cell(h,true)).join("")}</Row>`;
- rows.forEach(r=>{ body += `<Row>${r.map(v=>cell(v)).join("")}</Row>`; });
- return `<Worksheet ss:Name="${escXml(name)}"><Table>${body}</Table></Worksheet>`;
-}
-function ensureAll(){
- Object.keys(CONFIG).forEach(ensure);
- persist();
-}
-function buildExcelXml(){
- ensureAll();
- const sheets=[];
-
- sheets.push(worksheet("짱프렌즈",
-   ["기계명","누적 매출","배출량"],
-   all.friends.rows.map(r=>[`짱프렌즈_${String(r.machine).padStart(2,"0")}`,r.sales,r.output])
- ));
- sheets.push(worksheet("잼나3",
-   ["기계명","배출량"],
-   all.jamna.rows.map(r=>[`잼나3_${r.machine}`,r.output])
- ));
- sheets.push(worksheet("미니",
-   ["기계명","왼쪽","오른쪽"],
-   all.mini.rows.map(r=>[
-      `잼나 4 미니_${r.machine}`,
-      r.leftOutput,
-      r.rightOutput
-   ])
- ));
- sheets.push(worksheet("조이플레이어",
-   ["기계명","배출량"],
-   all.joy.rows.map(r=>[`조이플레이어_${r.machine}`,r.output])
- ));
- sheets.push(worksheet("UFO",
-   ["기계명","총판","배출량"],
-   all.ufo.rows.flatMap(r=>[
-      [`UFO_${r.machine} L`,r.leftTotal,r.leftOutput],
-      [`UFO_${r.machine} R`,r.rightTotal,r.rightOutput]
-   ])
- ));
-
- return `<?xml version="1.0"?>
-<?mso-application progid="Excel.Sheet"?>
-<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
- xmlns:o="urn:schemas-microsoft-com:office:office"
- xmlns:x="urn:schemas-microsoft-com:office:excel"
- xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
- <Styles>
-  <Style ss:ID="Default" ss:Name="Normal">
-   <Alignment ss:Vertical="Center"/>
-   <Font ss:FontName="Arial" ss:Size="11"/>
-  </Style>
-  <Style ss:ID="Header">
-   <Font ss:FontName="Arial" ss:Size="11" ss:Bold="1"/>
-   <Interior ss:Color="#E7E7EA" ss:Pattern="Solid"/>
-  </Style>
- </Styles>
- ${sheets.join("\n")}
-</Workbook>`;
-}
-function exportExcelFile(){
+function ensureAll(){Object.keys(CONFIG).forEach(ensure);persist();}
+$("exportExcel").onclick=()=>{
  if(type) commit();
- const xml=buildExcelXml();
- const blob=new Blob([xml],{type:"application/vnd.ms-excel;charset=utf-8"});
- const url=URL.createObjectURL(blob);
- const a=document.createElement("a");
- const now=new Date();
- const pad=n=>String(n).padStart(2,"0");
- const stamp=`${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}`;
- a.href=url;
- a.download=`오락실_정산입력_${stamp}.xml`;
- document.body.appendChild(a);
- a.click();
- a.remove();
- setTimeout(()=>URL.revokeObjectURL(url),1000);
- if(type) $("status").textContent="전체 입력값 엑셀 파일 저장 완료 ✓";
-}
-$("exportExcel").onclick=exportExcelFile;
+ ensureAll();
+ if(!excelReady()) return;
+ const wb=XLSX.utils.book_new();
 
-$("closeText").onclick=()=>$("textCard").classList.add("hidden");
-$("closeCalc").onclick=()=>$("calcCard").classList.add("hidden");
+ addSheet(wb,"짱프렌즈",[
+   ["기계명","누적 매출","배출량"],
+   ...all.friends.rows.map(r=>[`짱프렌즈_${String(r.machine).padStart(2,"0")}`,numOrBlank(r.sales),numOrBlank(r.output)])
+ ],[18,12,12]);
+
+ addSheet(wb,"잼나3",[
+   ["기계명","배출량"],
+   ...all.jamna.rows.map(r=>[`잼나3_${r.machine}`,numOrBlank(r.output)])
+ ],[18,12]);
+
+ addSheet(wb,"미니",[
+   ["기계명","왼쪽","오른쪽"],
+   ...all.mini.rows.map(r=>[`잼나 4 미니_${r.machine}`,numOrBlank(r.leftOutput),numOrBlank(r.rightOutput)])
+ ],[20,12,12]);
+
+ addSheet(wb,"조이플레이어",[
+   ["기계명","배출량"],
+   ...all.joy.rows.map(r=>[`조이플레이어_${r.machine}`,numOrBlank(r.output)])
+ ],[20,12]);
+
+ addSheet(wb,"UFO",[
+   ["기계명","총판","배출량"],
+   ...all.ufo.rows.flatMap(r=>[
+     [`UFO_${r.machine} L`,numOrBlank(r.leftTotal),numOrBlank(r.leftOutput)],
+     [`UFO_${r.machine} R`,numOrBlank(r.rightTotal),numOrBlank(r.rightOutput)]
+   ])
+ ],[18,12,12]);
+
+ const now=new Date();
+ const stamp=`${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}`;
+ XLSX.writeFile(wb,`오락실_마감정산_${stamp}.xlsx`);
+ if(type) $("status").textContent="전체 마감 XLSX 저장 완료 ✓";
+};
+if($("resetAll")) $("resetAll").onclick=()=>{
+ if(confirm("짱프렌즈·잼나3·미니·조플·UFO의 모든 마감 입력값을 전부 삭제할까?")){
+   const again=confirm("진짜 전체 삭제할까? 되돌릴 수 없어.");
+   if(!again)return;
+   all={};localStorage.removeItem(KEY);localStorage.removeItem("arcade_close_carnival");
+   $("closeCarnivalSales").value="";
+   type=null;index=0;
+   document.querySelectorAll(".machine-btn").forEach(b=>b.classList.remove("active"));
+   $("entryCard").classList.add("hidden");$("resultsCard").classList.add("hidden");
+   $("resetCurrentCard").classList.add("hidden");
+   updateCloseMessage();
+   alert("전체 마감 데이터 삭제 완료");
+ }
+};
+
+$("closeCarnivalSales").value = getCloseCarnival();
+$("closeCarnivalSales").oninput=()=>{
+  setCloseCarnival($("closeCarnivalSales").value.trim());
+  updateCloseMessage();
+};
+$("closeMessage").onclick=()=>{
+  if(type) commit();
+  setCloseCarnival($("closeCarnivalSales").value.trim());
+  const msg=makeCloseMessage();
+  $("closeMessagePreview").textContent=msg;
+  copyText(msg,"마감 매출 메시지", type ? $("status") : null);
+};
+updateCloseMessage();
+
 document.querySelectorAll(".machine-btn").forEach(b=>b.onclick=()=>setType(b.dataset.type));
 })();
 </script>
